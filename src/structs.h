@@ -149,6 +149,8 @@ typedef struct
 # define w_p_fdc w_onebuf_opt.wo_fdc	/* 'foldcolumn' */
     int		wo_fdc_save;
 # define w_p_fdc_save w_onebuf_opt.wo_fdc_save	/* 'foldenable' saved for diff mode */
+    int		wo_fsl;
+# define w_p_fsl w_onebuf_opt.wo_fsl	/* 'foldcolshowlvl' */
     int		wo_fen;
 # define w_p_fen w_onebuf_opt.wo_fen	/* 'foldenable' */
     int		wo_fen_save;

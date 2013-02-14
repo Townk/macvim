@@ -1151,6 +1151,7 @@ enum
 #endif
 #ifdef FEAT_FOLDING
     , WV_FDC
+    , WV_FSL
     , WV_FEN
     , WV_FDI
     , WV_FDL
