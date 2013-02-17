@@ -459,6 +459,7 @@ EXTERN long	p_fic;		/* 'fileignorecase' */
 EXTERN char_u	*p_fcl;		/* 'foldclose' */
 EXTERN long	p_fdls;		/* 'foldlevelstart' */
 EXTERN char_u	*p_fdo;		/* 'foldopen' */
+EXTERN char_u	*p_fds;		/* 'foldchars' */
 EXTERN unsigned	fdo_flags;
 # ifdef IN_OPTION_C
 static char *(p_fdo_values[]) = {"all", "block", "hor", "mark", "percent",
