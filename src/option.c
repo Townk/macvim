@@ -1203,6 +1203,9 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
 #ifdef FEAT_FOLDING
+    {"foldchars",   "fds",  P_STRING|P_VIM|P_RALL|P_COMMA|P_NODUP,
+			    (char_u *)&p_fds, PV_NONE,
+			    {(char_u *)"", (char_u *)"fa:|,fo:-,fc:+"} SCRIPTID_INIT},
     {"foldclose",   "fcl",  P_STRING|P_VI_DEF|P_ONECOMMA|P_NODUP|P_RWIN,
 			    (char_u *)&p_fcl, PV_NONE,
 			    {(char_u *)"", (char_u *)0L} SCRIPTID_INIT},
@@ -6104,6 +6107,10 @@ did_set_string_option(
 	    errmsg = e_invarg;
 	else if (set_chars_option(&p_lcs) != NULL)
 	    errmsg = (char_u *)_("E834: Conflicts with value of 'listchars'");
+#ifdef FEAT_FOLDING
+	else if (set_chars_option(&p_fds) != NULL)
+	    errmsg = (char_u *)_("E836: Conflicts with value of 'foldchars'");
+# endif
 # if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
 	else if (set_chars_option(&p_fcs) != NULL)
 	    errmsg = (char_u *)_("E835: Conflicts with value of 'fillchars'");
@@ -6531,7 +6538,13 @@ did_set_string_option(
     {
 	errmsg = set_chars_option(varp);
     }
-
+#ifdef FEAT_FOLDING
+    /* 'foldchars' */
+    else if (varp == &p_fds)
+    {
+	errmsg = set_chars_option(varp);
+    }
+#endif
 #if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
     /* 'fillchars' */
     else if (varp == &p_fcs)
@@ -7568,6 +7581,14 @@ set_chars_option(char_u **varp)
 	{NULL,		"conceal"},
 #endif
     };
+#ifdef FEAT_FOLDING
+    static struct charstab fdstab[] =
+    {
+	{&fds_fo,	"fo"},
+	{&fds_fc,	"fc"},
+	{&fds_fa,	"fa"},
+    };
+#endif
     struct charstab *tab;
 
 #if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
@@ -7577,6 +7598,13 @@ set_chars_option(char_u **varp)
 	tab = lcstab;
 	entries = sizeof(lcstab) / sizeof(struct charstab);
     }
+#ifdef FEAT_FOLDING
+    else if (varp == &p_fds)
+    {
+	tab = fdstab;
+	entries = sizeof(fdstab) / sizeof(struct charstab);
+    }
+#endif
 #if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
     else
     {
