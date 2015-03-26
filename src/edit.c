@@ -766,6 +766,11 @@ edit(
 	dont_scroll = FALSE;		/* allow scrolling here */
 #endif
 
+ 	if (stop_sync_undo == MAYBE)	/* cursor might come next */
+ 	    stop_sync_undo = TRUE;
+ 	else
+ 	    stop_sync_undo = FALSE;	/* sync undo with next char, if needed */
+
 	/*
 	 * Get a character for Insert mode.  Ignore K_IGNORE.
 	 */
@@ -6849,7 +6854,7 @@ spell_back_to_badword(void)
 
     spell_bad_len = spell_move_to(curwin, BACKWARD, TRUE, TRUE, NULL);
     if (curwin->w_cursor.col != tpos.col)
-	start_arrow(&tpos);
+	start_arrow(&tpos, TRUE);
 }
 #endif
 
@@ -8372,7 +8377,7 @@ ins_ctrl_g(void)
 
 	/* CTRL-G U: do not break undo with the next char */
 	case 'U':
-		  /* Allow one left/right cursor movement with the next char,
+                  /* Allow one left/right cursor movement with the next char,
 		   * without breaking undo. */
 		  dont_sync_undo = MAYBE;
 		  break;
@@ -9279,7 +9284,7 @@ ins_mouse(int c)
 	    curbuf = curwin->w_buffer;
 	}
 #endif
-	start_arrow(curwin == old_curwin ? &tpos : NULL);
+	start_arrow(curwin == old_curwin ? &tpos : NULL, TRUE);
 #ifdef FEAT_WINDOWS
 	if (curwin != new_curwin && win_valid(new_curwin))
 	{
@@ -9401,7 +9406,7 @@ ins_mousescroll(int dir)
 
     if (!equalpos(curwin->w_cursor, tpos))
     {
-	start_arrow(&tpos);
+	start_arrow(&tpos, TRUE);
 # ifdef FEAT_CINDENT
 	can_cindent = TRUE;
 # endif
@@ -9418,7 +9423,7 @@ ins_tabline(int c)
 		|| (current_tab != 0 && current_tab != tabpage_index(curtab)))
     {
 	undisplay_dollar();
-	start_arrow(&curwin->w_cursor);
+	start_arrow(&curwin->w_cursor, TRUE);
 # ifdef FEAT_CINDENT
 	can_cindent = TRUE;
 # endif
@@ -9444,7 +9449,7 @@ ins_scroll(void)
     tpos = curwin->w_cursor;
     if (gui_do_scroll())
     {
-	start_arrow(&tpos);
+	start_arrow(&tpos, TRUE);
 # ifdef FEAT_CINDENT
 	can_cindent = TRUE;
 # endif
@@ -9460,7 +9465,7 @@ ins_horscroll(void)
     tpos = curwin->w_cursor;
     if (gui_do_horiz_scroll(scrollbar_value, FALSE))
     {
-	start_arrow(&tpos);
+	start_arrow(&tpos, TRUE);
 # ifdef FEAT_CINDENT
 	can_cindent = TRUE;
 # endif
@@ -9535,7 +9540,7 @@ ins_home(int c)
     curwin->w_cursor.coladd = 0;
 #endif
     curwin->w_curswant = 0;
-    start_arrow(&tpos);
+    start_arrow(&tpos, TRUE);
 }
 
     static void
@@ -9554,7 +9559,7 @@ ins_end(int c)
     coladvance((colnr_T)MAXCOL);
     curwin->w_curswant = MAXCOL;
 
-    start_arrow(&tpos);
+    start_arrow(&tpos, TRUE);
 }
 
     static void
@@ -9567,7 +9572,7 @@ ins_s_left(void)
     undisplay_dollar();
     if (curwin->w_cursor.lnum > 1 || curwin->w_cursor.col > 0)
     {
-	start_arrow(&curwin->w_cursor);
+	start_arrow(&curwin->w_cursor, TRUE);
 	(void)bck_word(1L, FALSE, FALSE);
 	curwin->w_set_curswant = TRUE;
     }
@@ -9619,7 +9624,7 @@ ins_right(
     else if (vim_strchr(p_ww, ']') != NULL
 	    && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
     {
-	start_arrow(&curwin->w_cursor);
+	start_arrow(&curwin->w_cursor, TRUE);
 	curwin->w_set_curswant = TRUE;
 	++curwin->w_cursor.lnum;
 	curwin->w_cursor.col = 0;
@@ -9640,7 +9645,7 @@ ins_s_right(void)
     if (curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count
 	    || gchar_cursor() != NUL)
     {
-	start_arrow(&curwin->w_cursor);
+	start_arrow(&curwin->w_cursor, TRUE);
 	(void)fwd_word(1L, FALSE, 0);
 	curwin->w_set_curswant = TRUE;
     }
@@ -9670,7 +9675,7 @@ ins_up(
 #endif
 		)
 	    redraw_later(VALID);
-	start_arrow(&tpos);
+	start_arrow(&tpos, TRUE);
 #ifdef FEAT_CINDENT
 	can_cindent = TRUE;
 #endif
@@ -9692,7 +9697,7 @@ ins_pageup(void)
 	/* <C-PageUp>: tab page back */
 	if (first_tabpage->tp_next != NULL)
 	{
-	    start_arrow(&curwin->w_cursor);
+	    start_arrow(&curwin->w_cursor, TRUE);
 	    goto_tabpage(-1);
 	}
 	return;
@@ -9702,7 +9707,7 @@ ins_pageup(void)
     tpos = curwin->w_cursor;
     if (onepage(BACKWARD, 1L) == OK)
     {
-	start_arrow(&tpos);
+	start_arrow(&tpos, TRUE);
 #ifdef FEAT_CINDENT
 	can_cindent = TRUE;
 #endif
@@ -9733,7 +9738,7 @@ ins_down(
 #endif
 		)
 	    redraw_later(VALID);
-	start_arrow(&tpos);
+	start_arrow(&tpos, TRUE);
 #ifdef FEAT_CINDENT
 	can_cindent = TRUE;
 #endif
@@ -9755,7 +9760,7 @@ ins_pagedown(void)
 	/* <C-PageDown>: tab page forward */
 	if (first_tabpage->tp_next != NULL)
 	{
-	    start_arrow(&curwin->w_cursor);
+	    start_arrow(&curwin->w_cursor, TRUE);
 	    goto_tabpage(0);
 	}
 	return;
@@ -9765,7 +9770,7 @@ ins_pagedown(void)
     tpos = curwin->w_cursor;
     if (onepage(FORWARD, 1L) == OK)
     {
-	start_arrow(&tpos);
+	start_arrow(&tpos, TRUE);
 #ifdef FEAT_CINDENT
 	can_cindent = TRUE;
 #endif
